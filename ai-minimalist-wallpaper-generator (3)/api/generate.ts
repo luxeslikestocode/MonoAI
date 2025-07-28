@@ -25,15 +25,15 @@ export default async function handler(req: Request): Promise<Response> {
       // This error is for the server logs, the client will see a generic message.
       console.error("API_KEY environment variable is not set.");
       return new Response(JSON.stringify({ error: 'Server configuration error.' }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
       });
     }
 
     const ai = new GoogleGenAI({ apiKey });
 
     const fullPrompt = `A minimalist HD wallpaper, modern aesthetic, ${prompt}, vibrant colors, clean, simple, high resolution, aesthetic, 4k`;
-    
+
     const response = await ai.models.generateImages({
       model: 'imagen-3.0-generate-002',
       prompt: fullPrompt,
@@ -61,23 +61,18 @@ export default async function handler(req: Request): Promise<Response> {
   } catch (error) {
     console.error("Error in generate function:", error);
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-    
+
     if (errorMessage.includes('API key not valid')) {
-        return new Response(JSON.stringify({ error: "The application's API key is invalid. Please contact the administrator." }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+      return new Response(JSON.stringify({ error: "The application's API key is invalid. Please contact the administrator." }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
-     if (errorMessage.includes('blocked') || errorMessage.includes('SAFETY')) {
-        return new Response(JSON.stringify({ error: "The generation request was blocked due to safety settings. Please try a different prompt." }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' },
-        });
+    if (errorMessage.includes('blocked') || errorMessage.toLowerCase().includes('safety')) {
+      return new Response(JSON.stringify({ error: "The generation request was blocked due to safety settings. Please try a different prompt." }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ error: 'An internal server error occurred.' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-}
+    //
